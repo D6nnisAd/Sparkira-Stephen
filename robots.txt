@@ -1,0 +1,12 @@
+# robots.txt for sparkira.com.ng
+User-agent: *
+Allow: /
+
+# Exclude sensitive admin and auth paths from search results
+Disallow: /admin.html
+Disallow: /packages.html
+Disallow: /login.html
+Disallow: /register.html
+
+# Sitemap link once generated
+# Sitemap: https://sparkira.com.ng/sitemap.xml
