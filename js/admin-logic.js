@@ -21,7 +21,7 @@ const ADMIN_UIDS = ['nVpgXNS6Khfqr7NGdKxA397ZdUq2'];
 
 // Elements
 const adminForm = document.getElementById('adminForm');
-const koraKeyInput = document.getElementById('koraKey');
+const paystackKeyInput = document.getElementById('paystackKey');
 const globalLinkInput = document.getElementById('globalLink');
 const btn = document.getElementById('saveBtn');
 const alertBox = document.getElementById('adminAlert');
@@ -42,7 +42,7 @@ onAuthStateChanged(auth, async (user) => {
             
             if (configSnap.exists()) {
                 const data = configSnap.data();
-                koraKeyInput.value = data.koraPublicKey || '';
+                paystackKeyInput.value = data.paystackPublicKey || '';
                 globalLinkInput.value = data.globalLink || '';
             }
         } catch (err) {
@@ -66,7 +66,7 @@ if (adminForm) {
         try {
             const configRef = doc(db, "settings", "globalConfigs");
             await setDoc(configRef, {
-                koraPublicKey: koraKeyInput.value.trim(),
+                paystackPublicKey: paystackKeyInput.value.trim(),
                 globalLink: globalLinkInput.value.trim(),
                 updatedAt: new Date().toISOString()
             }, { merge: true });
