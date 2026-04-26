@@ -77,7 +77,7 @@ document.querySelectorAll('.checkout-btn').forEach(button => {
             amount: parseFloat(amount) * 100, // Paystack uses kobo (kobo = NGN * 100)
             currency: "NGN",
             ref: `SPARKIRA_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-            channels: ['bank_transfer', 'card', 'bank', 'ussd', 'qr', 'mobile_money'],
+            channels: ['bank_transfer', 'bank', 'ussd', 'qr', 'mobile_money'],
             metadata: {
                 custom_fields: [
                     {
