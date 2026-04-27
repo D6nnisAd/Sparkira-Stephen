@@ -16,7 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Globals fetched from Admin Settings
-let dynamicPaystackKey = null;
+let dynamicKoraKey = null;
 let dynamicGlobalLink = "#";
 let currentUser = null;
 
@@ -32,7 +32,7 @@ onAuthStateChanged(auth, async (user) => {
             const configSnap = await getDoc(configRef);
             if (configSnap.exists()) {
                 const data = configSnap.data();
-                dynamicPaystackKey = data.paystackPublicKey;
+                dynamicKoraKey = data.koraPublicKey;
                 dynamicGlobalLink = data.globalLink;
                 
                 // Update support link natively!
@@ -68,43 +68,33 @@ document.querySelectorAll('.checkout-btn').forEach(button => {
         }
         
         // Provide a massive fallback if the DB hasn't been configured or Firestore rules block read access
-        const finalPaystackKey = dynamicPaystackKey || "pk_live_96e0c2a82c83cd09dc9dad7895c3ee918f0c542a";
+        const finalKoraKey = dynamicKoraKey || "pk_live_Yx9DGcvjpKxXMANiwp1kwnBfKq1ZPYz2h63fTwHs";
 
-        // Initialize Paystack SDK integration securely
-        let handler = PaystackPop.setup({
-            key: finalPaystackKey,
-            email: currentUser.email,
-            amount: parseFloat(amount) * 100, // Paystack uses kobo (kobo = NGN * 100)
+        // Initialize KoraPay SDK integration securely
+        window.Korapay.initialize({
+            key: finalKoraKey,
+            reference: `SPARKIRA_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+            amount: parseFloat(amount),
             currency: "NGN",
-            ref: `SPARKIRA_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-            channels: ['bank_transfer', 'bank', 'ussd', 'qr', 'mobile_money'],
-            metadata: {
-                custom_fields: [
-                    {
-                        display_name: "Package",
-                        variable_name: "package",
-                        value: pkgName
-                    },
-                    {
-                        display_name: "Customer Name",
-                        variable_name: "customer_name",
-                        value: currentUser.displayName || "Sparkira User"
-                    }
-                ]
+            customer: {
+                name: currentUser.displayName || "Sparkira User",
+                email: currentUser.email
             },
-            callback: function(response) {
+            onSuccess: function(response) {
                 // Route deeply upon validation
                 console.log("Payment successful:", response);
                 window.location.href = dynamicGlobalLink;
             },
+            onFailed: function(data) {
+                console.log("Payment failed", data);
+                alertBox.className = 'alert custom-alert text-danger border-danger';
+                alertBox.innerText = 'Payment failed or was cancelled.';
+                alertBox.classList.remove('d-none');
+            },
             onClose: function() {
                 console.log("Payment window closed");
-                alertBox.className = 'alert custom-alert text-warning border-warning';
-                alertBox.innerText = 'Payment window closed or cancelled.';
-                alertBox.classList.remove('d-none');
             }
         });
-        handler.openIframe();
     });
 });
 
