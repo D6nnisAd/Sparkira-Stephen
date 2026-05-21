@@ -16,7 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Globals fetched from Admin Settings
-let dynamicSquadKey = null;
+let dynamicKoraKey = null;
 let dynamicGlobalLink = "#";
 let currentUser = null;
 
@@ -32,7 +32,7 @@ onAuthStateChanged(auth, async (user) => {
             const configSnap = await getDoc(configRef);
             if (configSnap.exists()) {
                 const data = configSnap.data();
-                dynamicSquadKey = data.squadPublicKey;
+                dynamicKoraKey = data.koraPublicKey;
                 dynamicGlobalLink = data.globalLink;
                 
                 // Update support link natively!
@@ -68,31 +68,34 @@ document.querySelectorAll('.checkout-btn').forEach(button => {
         }
         
         // Provide a massive fallback if the DB hasn't been configured or Firestore rules block read access
-        const finalSquadKey = dynamicSquadKey || "pk_4300b63695833202ef2658af4f435d80de024ac6";
+        const finalKoraKey = dynamicKoraKey || "pk_live_Yx9DGcvjpKxXMANiwp1kwnBfKq1ZPYz2h63fTwHs";
 
-        // Initialize SquadCo SDK integration securely
-        const squadInstance = new squad({
-            onClose: () => console.log("Widget closed"),
-            onLoad: () => console.log("Widget loaded successfully"),
-            onSuccess: (response) => {
+        // Initialize Korapay SDK integration securely
+        window.Korapay.initialize({
+            key: finalKoraKey,
+            reference: `SPARKIRA_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+            amount: parseFloat(amount),
+            currency: "NGN",
+            customer: {
+                name: currentUser.displayName || "Sparkira User",
+                email: currentUser.email
+            },
+            channels: ["bank_transfer"],
+            onSuccess: function(response) {
                 // Route deeply upon validation
                 console.log("Payment successful:", response);
                 window.location.href = dynamicGlobalLink;
             },
-            // Required parameters
-            key: finalSquadKey,
-            email: currentUser.email,
-            amount: parseFloat(amount) * 100, // SquadCo expects amount in Kobo (Naira * 100)
-            currency_code: "NGN",
-            transaction_ref: `SPARKIRA_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-            metadata: {
-                package: pkgName,
-                customerName: currentUser.displayName || "Sparkira User"
+            onFailed: function(data) {
+                console.log("Payment failed", data);
+                alertBox.className = 'alert custom-alert text-danger border-danger';
+                alertBox.innerText = 'Payment failed or was cancelled.';
+                alertBox.classList.remove('d-none');
+            },
+            onClose: function() {
+                console.log("Payment window closed");
             }
         });
-
-        squadInstance.setup();
-        squadInstance.open();
     });
 });
 
